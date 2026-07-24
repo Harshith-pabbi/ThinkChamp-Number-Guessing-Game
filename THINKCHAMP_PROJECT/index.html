@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game - Think Champ</title>
+    <meta name="description" content="An interactive, modern Number Guessing Game built for Think Champ Pvt Ltd Internship Assignment. Features difficulty levels, visual countdown, sound effects, hints, and leaderboard.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Animated Canvas for Particle Effects -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-badge">THINK CHAMP</div>
+            <h1 class="app-title">Number Guessing Game</h1>
+            <p class="app-subtitle">Can you guess the secret number before attempts run out?</p>
+        </header>
+
+        <!-- Difficulty Selection Bar -->
+        <div class="difficulty-bar" id="difficulty-bar">
+            <button class="diff-btn" data-diff="easy" id="diff-easy">
+                <span class="diff-name">Easy</span>
+                <span class="diff-info">1 - 50 (10 Attempts)</span>
+            </button>
+            <button class="diff-btn active" data-diff="medium" id="diff-medium">
+                <span class="diff-name">Medium</span>
+                <span class="diff-info">1 - 100 (7 Attempts)</span>
+            </button>
+            <button class="diff-btn" data-diff="hard" id="diff-hard">
+                <span class="diff-name">Hard</span>
+                <span class="diff-info">1 - 200 (5 Attempts)</span>
+            </button>
+            <button class="diff-btn" data-diff="custom" id="diff-custom">
+                <span class="diff-name">Custom</span>
+                <span class="diff-info">Set Custom Range</span>
+            </button>
+        </div>
+
+        <!-- Custom Mode Settings (Hidden by default) -->
+        <div class="custom-config-card hidden" id="custom-config-card">
+            <h3>Custom Game Settings</h3>
+            <div class="custom-inputs">
+                <div class="input-group">
+                    <label for="custom-min">Min Number:</label>
+                    <input type="number" id="custom-min" value="1" min="1">
+                </div>
+                <div class="input-group">
+                    <label for="custom-max">Max Number:</label>
+                    <input type="number" id="custom-max" value="100" min="2">
+                </div>
+                <div class="input-group">
+                    <label for="custom-attempts">Attempts:</label>
+                    <input type="number" id="custom-attempts" value="7" min="1" max="50">
+                </div>
+            </div>
+            <button class="btn primary-btn" id="apply-custom-btn">Apply & Start Custom Game</button>
+        </div>
+
+        <!-- Main Game Card -->
+        <main class="game-card" id="game-card">
+            <!-- Top Status Row: Range Info & Remaining Attempts Countdown -->
+            <div class="game-status-row">
+                <div class="range-indicator" id="range-indicator">
+                    <span class="label">Range:</span>
+                    <span class="value" id="range-text">1 to 100</span>
+                </div>
+                
+                <div class="countdown-meter" id="countdown-meter">
+                    <div class="meter-circle">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="circle" id="meter-progress-path" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="meter-text">
+                            <span class="count-val" id="attempts-left-val">7</span>
+                            <span class="count-label">Attempts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input & Guess Submission Section -->
+            <form class="guess-form" id="guess-form" onsubmit="return false;">
+                <div class="input-wrapper">
+                    <input type="number" id="guess-input" placeholder="Enter your guess..." autocomplete="off" autofocus required>
+                    <button type="submit" class="btn submit-btn" id="submit-guess-btn">
+                        <span>Submit Guess</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="input-feedback hidden" id="input-feedback"></div>
+            </form>
+
+            <!-- Latest Hint & Feedback Box -->
+            <div class="hint-box-container hidden" id="hint-box-container">
+                <div class="hint-card" id="latest-hint-card">
+                    <div class="hint-badge" id="hint-badge">TOO HIGH</div>
+                    <div class="hint-detail" id="hint-detail">Try a lower number!</div>
+                    <div class="temp-indicator" id="temp-indicator"></div>
+                </div>
+            </div>
+
+            <!-- History List of Guesses -->
+            <div class="guess-history-section">
+                <div class="section-title">
+                    <span>Guess History</span>
+                    <span class="badge" id="attempt-badge">0 / 7 Attempts Used</span>
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="empty-state" id="empty-history-state">No guesses made yet. Enter a number above to start!</div>
+                </div>
+            </div>
+
+            <!-- Game Result Overlay Card (Hidden by default, shown on Win / Game Over) -->
+            <div class="result-modal hidden" id="result-modal">
+                <div class="result-content">
+                    <div class="result-icon" id="result-icon">🎉</div>
+                    <h2 class="result-title" id="result-title">You Won!</h2>
+                    <p class="result-desc" id="result-desc">You guessed the secret number in 3 attempts!</p>
+                    <div class="secret-reveal-card">
+                        <span class="lbl">Secret Number:</span>
+                        <span class="val" id="secret-number-display">37</span>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn primary-btn pulse-btn" id="play-again-btn">Play Again</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Stats & Sound Controls Footer -->
+        <footer class="app-footer">
+            <button class="icon-btn" id="sound-toggle-btn" title="Toggle Sound">
+                <span id="sound-icon">🔊 Sound: ON</span>
+            </button>
+            <button class="icon-btn" id="show-stats-btn" title="View Leaderboard & Stats">
+                <span>🏆 Leaderboard & Stats</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="stats-modal-backdrop hidden" id="stats-modal">
+        <div class="stats-modal-card">
+            <div class="modal-header">
+                <h2>🏆 Leaderboard & Game Stats</h2>
+                <button class="close-btn" id="close-stats-btn">&times;</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="num" id="stat-played">0</span>
+                    <span class="lbl">Played</span>
+                </div>
+                <div class="stat-box">
+                    <span class="num" id="stat-won">0</span>
+                    <span class="lbl">Won</span>
+                </div>
+                <div class="stat-box">
+                    <span class="num" id="stat-winrate">0%</span>
+                    <span class="lbl">Win Rate</span>
+                </div>
+            </div>
+            <h3>Best Scores (Fewest Attempts)</h3>
+            <div class="best-scores-list" id="best-scores-list">
+                <div class="score-row"><span>Easy Mode:</span> <strong id="best-easy">-</strong></div>
+                <div class="score-row"><span>Medium Mode:</span> <strong id="best-medium">-</strong></div>
+                <div class="score-row"><span>Hard Mode:</span> <strong id="best-hard">-</strong></div>
+            </div>
+            <button class="btn secondary-btn" id="reset-stats-btn">Reset Stats</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
